@@ -1,16 +1,30 @@
-import { useRef, useState } from 'react';
+import { useRef, useState } from "react";
 
-import Places from './components/Places.jsx';
-import { AVAILABLE_PLACES } from './data.js';
-import Modal from './components/Modal.jsx';
-import DeleteConfirmation from './components/DeleteConfirmation.jsx';
-import logoImg from './assets/logo.png';
+import Places from "./components/Places.jsx";
+import { AVAILABLE_PLACES } from "./data.js";
+import Modal from "./components/Modal.jsx";
+import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
+import logoImg from "./assets/logo.png";
+import { sortPlacesByDistance } from "./loc.js";
 
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState([]);
+  const [availablePlaces,setAvailablePlaces]=useState([]);
 
+  // Access the current location of the user .. method directly provided by the browser
+  // Below code is side effect- bcoz not directly related to any code
+  navigator.geolocation.getCurrentPosition((position) => {
+    const sortPlaces=sortPlacesByDistance(
+      AAVAILABLE_PLACES,
+      position.coords.latitude,
+      position.coords.longitude
+    );
+    // state updating function rendring app component infinite time so avoid the side effect here
+    // use the useEffect instead of.
+    setAvailablePlaces(sortPlaces);
+  });
   function handleStartRemovePlace(id) {
     modal.current.open();
     selectedPlace.current = id;
@@ -57,13 +71,13 @@ function App() {
       <main>
         <Places
           title="I'd like to visit ..."
-          fallbackText={'Select the places you would like to visit below.'}
+          fallbackText={"Select the places you would like to visit below."}
           places={pickedPlaces}
           onSelectPlace={handleStartRemovePlace}
         />
         <Places
           title="Available Places"
-          places={AVAILABLE_PLACES}
+          places={availablePlaces}
           onSelectPlace={handleSelectPlace}
         />
       </main>
