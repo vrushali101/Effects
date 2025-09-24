@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Places from "./components/Places.jsx";
 import { AVAILABLE_PLACES } from "./data.js";
@@ -7,24 +7,32 @@ import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
 import logoImg from "./assets/logo.png";
 import { sortPlacesByDistance } from "./loc.js";
 
+const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+    const storedPlaces = storedIds.map((id) =>
+      AVAILABLE_PLACES.find((place) => place.id === id)
+    );
+
 function App() {
   const modal = useRef();
   const selectedPlace = useRef();
-  const [pickedPlaces, setPickedPlaces] = useState([]);
-  const [availablePlaces,setAvailablePlaces]=useState([]);
+  const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
+  const [availablePlaces, setAvailablePlaces] = useState([]);
 
-  // Access the current location of the user .. method directly provided by the browser
-  // Below code is side effect- bcoz not directly related to any code
-  navigator.geolocation.getCurrentPosition((position) => {
-    const sortPlaces=sortPlacesByDistance(
-      AAVAILABLE_PLACES,
-      position.coords.latitude,
-      position.coords.longitude
-    );
-    // state updating function rendring app component infinite time so avoid the side effect here
-    // use the useEffect instead of.
-    setAvailablePlaces(sortPlaces);
-  });
+  
+    
+   
+  useEffect(() => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const sortPlaces = sortPlacesByDistance(
+        AVAILABLE_PLACES,
+        position.coords.latitude,
+        position.coords.longitude
+      );
+
+      setAvailablePlaces(sortPlaces);
+    });
+  }, []);
+
   function handleStartRemovePlace(id) {
     modal.current.open();
     selectedPlace.current = id;
@@ -42,6 +50,13 @@ function App() {
       const place = AVAILABLE_PLACES.find((place) => place.id === id);
       return [place, ...prevPickedPlaces];
     });
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+    console.log("Before adding:", storedIds);
+    if (id && !storedIds.includes(id)) {
+      storedIds.push(id);
+      localStorage.setItem("selectedPlaces", JSON.stringify(storedIds));
+    }
+    console.log("After adding:", storedIds);
   }
 
   function handleRemovePlace() {
@@ -49,6 +64,11 @@ function App() {
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
     modal.current.close();
+    const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
+    localStorage.setItem(
+      "selectedPlaces",
+      JSON.stringify(storedIds.filter((id) => id !== selectedPlace.current))
+    );
   }
 
   return (
@@ -78,6 +98,7 @@ function App() {
         <Places
           title="Available Places"
           places={availablePlaces}
+          fallbackText={"Places sorted accordingly distance ..."}
           onSelectPlace={handleSelectPlace}
         />
       </main>
