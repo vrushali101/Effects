@@ -8,19 +8,16 @@ import logoImg from "./assets/logo.png";
 import { sortPlacesByDistance } from "./loc.js";
 
 const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
-    const storedPlaces = storedIds.map((id) =>
-      AVAILABLE_PLACES.find((place) => place.id === id)
-    );
+const storedPlaces = storedIds.map((id) =>
+  AVAILABLE_PLACES.find((place) => place.id === id)
+);
 
 function App() {
-  const modal = useRef();
+  const [modalIsOpen,setModalIsOpen]=useState(false);
   const selectedPlace = useRef();
   const [pickedPlaces, setPickedPlaces] = useState(storedPlaces);
   const [availablePlaces, setAvailablePlaces] = useState([]);
-
   
-    
-   
   useEffect(() => {
     navigator.geolocation.getCurrentPosition((position) => {
       const sortPlaces = sortPlacesByDistance(
@@ -34,12 +31,14 @@ function App() {
   }, []);
 
   function handleStartRemovePlace(id) {
-    modal.current.open();
+    // modal.current.open();
+    setModalIsOpen(true);
     selectedPlace.current = id;
   }
 
   function handleStopRemovePlace() {
-    modal.current.close();
+    setModalIsOpen(false);
+    //modal.current.close();
   }
 
   function handleSelectPlace(id) {
@@ -51,19 +50,20 @@ function App() {
       return [place, ...prevPickedPlaces];
     });
     const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
-    console.log("Before adding:", storedIds);
+    //console.log("Before adding:", storedIds);
     if (id && !storedIds.includes(id)) {
       storedIds.push(id);
       localStorage.setItem("selectedPlaces", JSON.stringify(storedIds));
     }
-    console.log("After adding:", storedIds);
+    //console.log("After adding:", storedIds);
   }
 
   function handleRemovePlace() {
     setPickedPlaces((prevPickedPlaces) =>
       prevPickedPlaces.filter((place) => place.id !== selectedPlace.current)
     );
-    modal.current.close();
+    setModalIsOpen(false);
+   // modal.current.close();
     const storedIds = JSON.parse(localStorage.getItem("selectedPlaces")) || [];
     localStorage.setItem(
       "selectedPlaces",
@@ -73,7 +73,7 @@ function App() {
 
   return (
     <>
-      <Modal ref={modal}>
+      <Modal  open={modalIsOpen} onClose={handleStopRemovePlace}>
         <DeleteConfirmation
           onCancel={handleStopRemovePlace}
           onConfirm={handleRemovePlace}
